@@ -6,10 +6,8 @@ import { AuthRoutes } from './AuthRoutes'
 import { Loading } from '../components/Loading'
 import { useAuth } from '../hooks/useAuth'
 
-const loading = false
-
 export function Routes() {
-  const { session } = useAuth()
+  const { session, isLoading } = useAuth()
   console.log('AuthContext:', session?.user.role)
 
   function Route() {
@@ -23,7 +21,7 @@ export function Routes() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return <Loading />
   }
 

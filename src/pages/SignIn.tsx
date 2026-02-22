@@ -26,11 +26,10 @@ export function SignIn() {
       const response = await api.post('/sessions', data)
 
       auth.save(response.data)
-      console.log('Login bem-sucedido:', response.data)
+      // console.log('Login bem-sucedido:', response.data)
       // Aqui você pode chamar sua API de autenticação com os dados validados
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.log('ZodErro')
         return {
           message: error.issues.map((issue) => issue.message).join('\n'),
         }
