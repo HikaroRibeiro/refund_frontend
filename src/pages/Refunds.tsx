@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react'
 import { Input } from '../components/Input'
 import { Select } from '../components/Select'
@@ -6,12 +5,21 @@ import { CATEGORIES, CATEGORIES_KEYS } from '../utils/categories'
 import { Upload } from '../components/Upload'
 import { Button } from '../components/Button'
 import { useNavigate, useParams } from 'react-router'
+import { z, ZodError } from 'zod'
 import fileSvg from '../assets/file.svg'
 
+const refundsSchema = z.object({
+  name: z.string().min(3, 'O nome deve conter no mínimo 3 caracteres.'),
+  amount: z
+    .number({ message: 'O valor deve ser um número válido.' })
+    .positive({ message: 'O valor deve ser positivo.' }),
+  category: z.enum(CATEGORIES_KEYS, { message: 'Categoria inválida.' }),
+})
+
 export default function Refunds() {
-  const [name, setName] = useState('Teste')
-  const [amount, setAmount] = useState('34')
-  const [category, setCategory] = useState('transport')
+  const [name, setName] = useState('')
+  const [amount, setAmount] = useState('')
+  const [category, setCategory] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [filename, setFilename] = useState<File | null>(null)
 
@@ -23,9 +31,27 @@ export default function Refunds() {
     if (params.id) {
       return navigate(-1)
     }
-    // Inserindo na navegação, que ela vem de um "Submit".
-    navigate('/confirm', { state: { fromSubmit: true } })
-    console.log({ name, amount, category }, filename)
+    try {
+      setIsLoading(true)
+
+      const refunds = refundsSchema.safeParse({
+        name,
+        amount: Number(amount.replace(',', '.')),
+        category,
+      })
+      // Inserindo na navegação, que ela vem de um "Submit".
+      console.log(refunds)
+      navigate('/confirm', { state: { fromSubmit: true } })
+    } catch (error) {
+      if (error instanceof ZodError) {
+        console.log(
+          'Erros de validação:',
+          error.issues.map((issue) => issue.message),
+        )
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
   return (
     <form
