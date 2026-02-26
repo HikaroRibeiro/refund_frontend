@@ -6,7 +6,9 @@ import { Upload } from '../components/Upload'
 import { Button } from '../components/Button'
 import { useNavigate, useParams } from 'react-router'
 import { z, ZodError } from 'zod'
+import { api } from '../services/api'
 import fileSvg from '../assets/file.svg'
+import { AxiosError } from 'axios'
 
 const refundsSchema = z.object({
   name: z.string().min(3, 'O nome deve conter no mínimo 3 caracteres.'),
@@ -26,7 +28,7 @@ export default function Refunds() {
   const navigate = useNavigate()
   const params = useParams<{ id: string }>()
 
-  function onSubmit(e: React.ChangeEvent) {
+  async function onSubmit(e: React.ChangeEvent) {
     e.preventDefault()
     if (params.id) {
       return navigate(-1)
@@ -39,14 +41,24 @@ export default function Refunds() {
         amount: Number(amount.replace(',', '.')),
         category,
       })
+
+      await api.post('/refunds', {
+        ...refunds.data,
+        filename: '1234567891011121314.png',
+      })
       // Inserindo na navegação, que ela vem de um "Submit".
       console.log(refunds)
       navigate('/confirm', { state: { fromSubmit: true } })
     } catch (error) {
       if (error instanceof ZodError) {
-        console.log(
-          'Erros de validação:',
-          error.issues.map((issue) => issue.message),
+        return alert({
+          message: error.issues.map((issue) => issue.message).join('\n'),
+        })
+      }
+      if (error instanceof AxiosError) {
+        return alert(
+          error.response?.data?.message ||
+            'Ocorreu um erro ao enviar a solicitação.',
         )
       }
     } finally {
