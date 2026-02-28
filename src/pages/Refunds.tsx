@@ -23,7 +23,7 @@ export default function Refunds() {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [filename, setFilename] = useState<File | null>(null)
+  const [file, setFile] = useState<File | null>(null)
 
   const navigate = useNavigate()
   const params = useParams<{ id: string }>()
@@ -36,6 +36,17 @@ export default function Refunds() {
     try {
       setIsLoading(true)
 
+      if (!file) {
+        return alert('Por favor, envie um comprovante.')
+      }
+
+      const fileUploadForm = new FormData()
+      fileUploadForm.append('file', file)
+
+      const response = await api.post('/uploads', fileUploadForm, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
       const refunds = refundsSchema.safeParse({
         name,
         amount: Number(amount.replace(',', '.')),
@@ -44,7 +55,7 @@ export default function Refunds() {
 
       await api.post('/refunds', {
         ...refunds.data,
-        filename: '1234567891011121314.png',
+        filename: response.data.filename,
       })
       // Inserindo na navegação, que ela vem de um "Submit".
       console.log(refunds)
@@ -121,8 +132,8 @@ export default function Refunds() {
         <Upload
           legend="Comprovante"
           type="file"
-          filename={filename && filename.name}
-          onChange={(e) => e.target.files && setFilename(e.target.files[0])}
+          filename={file && file.name}
+          onChange={(e) => e.target.files && setFile(e.target.files[0])}
         />
       )}
       <Button type="submit" isLoading={isLoading}>
