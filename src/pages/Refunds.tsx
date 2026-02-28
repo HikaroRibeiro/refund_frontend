@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '../components/Input'
 import { Select } from '../components/Select'
 import { CATEGORIES, CATEGORIES_KEYS } from '../utils/categories'
@@ -9,6 +9,7 @@ import { z, ZodError } from 'zod'
 import { api } from '../services/api'
 import fileSvg from '../assets/file.svg'
 import { AxiosError } from 'axios'
+import { formatCurrency } from '../utils/formatCurrency'
 
 const refundsSchema = z.object({
   name: z.string().min(3, 'O nome deve conter no mínimo 3 caracteres.'),
@@ -24,6 +25,7 @@ export default function Refunds() {
   const [category, setCategory] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
+  const [fileUrl, setFileUrl] = useState<string | null>(null)
 
   const navigate = useNavigate()
   const params = useParams<{ id: string }>()
@@ -76,6 +78,30 @@ export default function Refunds() {
       setIsLoading(false)
     }
   }
+
+  async function fetchRefunds(id: string) {
+    const response = await api
+      .get<RefundApiResponse>(`/refunds/${id}`)
+      .catch((err: AxiosError) => {
+        console.error('Error fetching refund details:', err)
+        alert(
+          'Ocorreu um erro ao buscar os detalhes da solicitação. Tente novamente.',
+        )
+      })
+    setName(response?.data.name || '')
+    setAmount(formatCurrency(response?.data.amount || 0))
+    setCategory(response?.data.category || '')
+    setFileUrl(response?.data.filename || null)
+
+    return response?.data
+  }
+
+  useEffect(() => {
+    if (params.id) {
+      fetchRefunds(params.id)
+    }
+  }, [params.id])
+
   return (
     <form
       action="#"
@@ -119,9 +145,9 @@ export default function Refunds() {
           disabled={!!params.id}
         />
       </div>
-      {params.id ? (
+      {params.id && fileUrl ? (
         <a
-          href="https://www.rocketseat.com.br/"
+          href={`http://localhost:3333/uploads/${fileUrl}`}
           target="_blank"
           className="text-sm text-green-100 font-semibold flex items-center justify-center gap-2 my-6 hover:opacity-70 transition ease-linear"
           rel="noreferrer"

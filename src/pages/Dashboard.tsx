@@ -11,7 +11,7 @@ import { Pagination } from '../components/Pagination'
 import { api } from '../services/api'
 import { AxiosError } from 'axios'
 
-const PER_PAGE = 5
+const PER_PAGE = 2
 
 export default function Dashboard() {
   const [name, setName] = useState('')
@@ -68,7 +68,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchRefunds()
-  }, [])
+  }, [page])
 
   return (
     <div className="bg-gray-500 rounded-xl p-10 md:min-w-3xl mx-auto max-w-md">
